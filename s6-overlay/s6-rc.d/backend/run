@@ -1,0 +1,19 @@
+#!/command/with-contenv sh
+export ConnectionStrings__Default="Host=127.0.0.1;Port=5432;Database=overtime;Username=db_app_user;Password=Admin1234!"
+export ASPNETCORE_ENVIRONMENT=Production
+export ASPNETCORE_URLS=http://+:5005
+export Cors__AllowedOrigins__0=http://localhost:8080
+export ADMIN_TOKEN_SECRET=tims-demo-secret-change-in-prod
+export CorrelationKey=X-Correlation-Id
+
+# Wait for postgres to accept connections
+echo "Waiting for PostgreSQL..."
+until su postgres -c "psql -c 'SELECT 1'" > /dev/null 2>&1; do
+  sleep 1
+done
+
+echo "Running database migration and seed..."
+dotnet /app/overtime.dll -m
+
+echo "Starting backend API..."
+exec dotnet /app/overtime.dll

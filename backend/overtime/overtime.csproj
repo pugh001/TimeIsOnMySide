@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.15" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.15">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
+    <PackageReference Include="Serilog.AspNetCore" Version="6.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="8.0.15" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="MailKit" Version="4.17.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>overtime.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="overtime\appsettings.Development.json" />
+    <_ContentIncludedByDefault Remove="overtime\appsettings.json" />
+    <_ContentIncludedByDefault Remove="overtime\bin\Debug\net8.0\appsettings.Development.json" />
+    <_ContentIncludedByDefault Remove="overtime\bin\Debug\net8.0\appsettings.json" />
+    <_ContentIncludedByDefault Remove="overtime\bin\Debug\net8.0\overtime.deps.json" />
+    <_ContentIncludedByDefault Remove="overtime\bin\Debug\net8.0\overtime.runtimeconfig.json" />
+    <_ContentIncludedByDefault Remove="overtime\obj\Debug\net8.0\overtime.sourcelink.json" />
+    <_ContentIncludedByDefault Remove="overtime\obj\Debug\net8.0\staticwebassets.build.json" />
+    <_ContentIncludedByDefault Remove="overtime\obj\overtime.csproj.nuget.dgspec.json" />
+    <_ContentIncludedByDefault Remove="overtime\obj\project.assets.json" />
+    <_ContentIncludedByDefault Remove="overtime\Properties\launchSettings.json" />
+  </ItemGroup>
+
+</Project>

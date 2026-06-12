@@ -1,0 +1,21 @@
+﻿{
+  "profiles": {
+    "run": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:5005",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "local"
+      }
+    },
+    "migration": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Local"
+      },
+      "commandLineArgs": "-m"
+    }
+  }
+}
+
