@@ -1,0 +1,7 @@
+**/node_modules/
+**/.env
+.omc/
+.claude/
+.DS_Store
+backend/nuget-packages/
+timeisonymyside.tar.gz
