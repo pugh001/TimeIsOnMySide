@@ -1,0 +1,24 @@
+services:
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"
+
+  app:
+    image: timeisonymyside
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - tims-data:/var/lib/postgresql/data
+    environment:
+      Email__SmtpHost: mailpit
+      Email__SmtpPort: 1025
+      Email__FromAddress: noreply@timeisonymyside.local
+      Email__FromName: TimeIsOnMySide
+      Email__DemoRecipientEmail: demo@example.com
+    depends_on:
+      - mailpit
+
+volumes:
+  tims-data:

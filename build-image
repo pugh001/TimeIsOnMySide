@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Build the Docker image and export it to timeisonymyside.tar.gz for offline distribution.
+# Run this once before zipping the repo to share with colleagues.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+if ! command -v docker &>/dev/null; then
+  echo "ERROR: Docker is not installed or not in PATH."
+  exit 1
+fi
+
+echo "Building image (requires internet access, ~5-8 min first time) ..."
+docker compose -f "$SCRIPT_DIR/docker-compose.yml" build
+
+echo "Saving image to timeisonymyside.tar.gz ..."
+docker save timeisonymyside | gzip >"$SCRIPT_DIR/timeisonymyside.tar.gz"
+
+SIZE=$(du -sh "$SCRIPT_DIR/timeisonymyside.tar.gz" | cut -f1)
+echo ""
+echo "Done. Image saved to timeisonymyside.tar.gz ($SIZE)"
+echo ""

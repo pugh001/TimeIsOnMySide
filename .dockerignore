@@ -1,0 +1,13 @@
+**/.git
+**/.gitignore
+**/node_modules
+frontend/dist
+**/bin
+**/obj
+**/*.user
+**/.vs
+**/.vscode
+frontend/playwright-report
+frontend/test-results
+backend/overtime.Tests
+**/appsettings.local.json
