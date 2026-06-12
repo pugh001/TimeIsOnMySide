@@ -1,0 +1,8 @@
+#!/command/with-contenv sh
+# Wait for backend to be ready
+until wget -qO- http://127.0.0.1:5005/health/liveness > /dev/null 2>&1; do
+  sleep 1
+done
+
+echo "Starting nginx..."
+exec nginx -c /etc/nginx/nginx.conf -g "daemon off;"

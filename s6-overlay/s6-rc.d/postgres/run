@@ -1,0 +1,17 @@
+#!/bin/sh
+PG_BIN=/usr/lib/postgresql/15/bin
+PGDATA=/var/lib/postgresql/data
+
+if [ ! -d "$PGDATA/base" ]; then
+  echo "Initialising PostgreSQL cluster..."
+  su postgres -c "$PG_BIN/initdb -D $PGDATA --auth-local trust --auth-host md5"
+  su postgres -c "$PG_BIN/pg_ctl -D $PGDATA -l /tmp/pg_init.log start"
+  # Wait for postgres to be ready
+  until su postgres -c "psql -c 'SELECT 1'" > /dev/null 2>&1; do sleep 1; done
+  su postgres -c "psql -c \"CREATE USER db_app_user WITH PASSWORD 'Admin1234!';\""
+  su postgres -c "psql -c \"CREATE DATABASE overtime OWNER db_app_user;\""
+  su postgres -c "$PG_BIN/pg_ctl -D $PGDATA stop"
+fi
+
+echo "Starting PostgreSQL..."
+exec su postgres -c "$PG_BIN/postgres -D $PGDATA"
