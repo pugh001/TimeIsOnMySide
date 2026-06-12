@@ -1,0 +1,6 @@
+bin/
+obj/
+*.user
+.DS_Store
+appsettings.local.json
+secrets.json
