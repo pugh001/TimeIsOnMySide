@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <RootNamespace>${{values.name}}</RootNamespace>
+        <IsPublishable>true</IsPublishable>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <UserSecretsId>cef15082-3565-464c-ab37-f5c78a1bd26f</UserSecretsId>
+        <Version>0.1.0</Version>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AWSSDK.RDS" Version="3.7.119.3"/>
+        <PackageReference Include="AWSSDK.SecretsManager" Version="3.7.2.41"/>
+        <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.1.131"/>
+        <PackageReference Include="Capitec.StrategicProjects.Shared" Version="1.1.1"/>
+        <PackageReference Include="Dapper" Version="2.0.123"/>
+        <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0"/>
+        <PackageReference Include="Npgsql" Version="8.0.0-preview.4"/>
+        <PackageReference Include="Serilog.AspNetCore" Version="6.1.0"/>
+        <PackageReference Include="Capitec.Serilog.Sinks.Fluentd" Version="1.0.3" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0"/>
+        <PackageReference Include="Unleash.Client" Version="4.1.6" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Update="DataAccess\SQL.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>SQL.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Update="DataAccess\SQL.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>SQL.resx</DependentUpon>
+        </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="Common\"/>
+        <Folder Include="Helpers\"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\README.md">
+        <Link>README.md</Link>
+      </Content>
+    </ItemGroup>
+
+</Project>

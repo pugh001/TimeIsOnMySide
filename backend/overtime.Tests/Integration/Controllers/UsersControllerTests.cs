@@ -162,15 +162,4 @@ public sealed class UsersControllerTests : IntegrationTestBase
         response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
 
-    // ── helpers ───────────────────────────────────────────────────────────
-
-    private async Task<(string token, string userId)> GetAdminTokenAsync()
-    {
-        var resp = await Client.PostAsJsonAsync("/api/auth/login",
-            new { username = "admin", password = "admin" });
-        resp.EnsureSuccessStatusCode();
-        var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
-        return (doc.RootElement.GetProperty("adminToken").GetString()!,
-                doc.RootElement.GetProperty("adminUserId").GetString()!);
-    }
 }

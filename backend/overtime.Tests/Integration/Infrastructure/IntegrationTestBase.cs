@@ -42,6 +42,8 @@ public abstract class IntegrationTestBase : IClassFixture<IntegrationTestFactory
         await using var scope = Factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<OvertimeDbContext>();
         await CleanupAsync(db, LocationSlug);
+        foreach (var slug in _extraLocationSlugs)
+            await CleanupAsync(db, slug);
     }
 
     private async Task SeedAsync(OvertimeDbContext db)
@@ -129,6 +131,71 @@ public abstract class IntegrationTestBase : IClassFixture<IntegrationTestFactory
         static UserWorkingTime Shift(string day) => new() { Day = day, ShiftStart = new TimeOnly(9, 0), ShiftEnd = new TimeOnly(17, 0) };
 
         static OpeningHours Std() => new() { OpenTime = new TimeOnly(9, 0), CloseTime = new TimeOnly(17, 0) };
+    }
+
+    protected async Task<(Guid locationId, string locationSlug)> SeedEarlyOpenLocationAsync(
+        TimeOnly openTime, TimeOnly closeTime, TimeOnly shiftStart, TimeOnly shiftEnd)
+    {
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<OvertimeDbContext>();
+
+        var slug = $"early-{Guid.NewGuid():N}";
+        var locId = Guid.NewGuid();
+
+        // Each day must be a separate OpeningHours instance — EF owned entities
+        // cannot share a single object across multiple navigation properties.
+        OpeningHours Hours() => new() { OpenTime = openTime, CloseTime = closeTime };
+
+        var location = new LocationEntity
+        {
+            Id = locId,
+            Slug = slug,
+            Name = "Early Open Branch",
+            OpeningHours = new LocationOpeningHours
+            {
+                Monday = Hours(), Tuesday = Hours(), Wednesday = Hours(),
+                Thursday = Hours(), Friday = Hours()
+            },
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<UserEntity>();
+        var staff = new UserEntity
+        {
+            Id = Guid.NewGuid(),
+            LocationId = locId,
+            Username = new string(slug.Where(char.IsLetter).Take(8).ToArray()) + "0001",
+            Role = "staff",
+            FullName = "Early Staff",
+            FirstName = "Early",
+            LastName = "Staff",
+            WorkingTimes = new[] { "monday", "tuesday", "wednesday", "thursday", "friday" }
+                .Select(d => new UserWorkingTime { Day = d, ShiftStart = shiftStart, ShiftEnd = shiftEnd })
+                .ToList(),
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+        staff.PasswordHash = hasher.HashPassword(staff, "EarlyP@ss1");
+
+        db.Locations.Add(location);
+        db.Users.Add(staff);
+        await db.SaveChangesAsync();
+
+        // Track for cleanup
+        _extraLocationSlugs.Add(slug);
+
+        return (locId, slug);
+    }
+
+    private readonly List<string> _extraLocationSlugs = [];
+
+    protected async Task<(string token, string userId)> GetAdminTokenAsync()
+    {
+        var resp = await Client.PostAsJsonAsync("/api/auth/login",
+            new { username = "admin", password = "admin" });
+        resp.EnsureSuccessStatusCode();
+        var doc = System.Text.Json.JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
+        return (doc.RootElement.GetProperty("adminToken").GetString()!,
+                doc.RootElement.GetProperty("adminUserId").GetString()!);
     }
 
     protected async Task<(string token, string userId)> GetStaffTokenAsync()

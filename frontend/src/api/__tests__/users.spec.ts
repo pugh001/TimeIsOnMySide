@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { createUser } from '../users'
+import { createUser, fetchUserBookings } from '../users'
 
 const validRequest = {
   firstName: 'Jane',
@@ -56,5 +56,54 @@ describe('createUser', () => {
       new Response(JSON.stringify({ error: 'Username already taken' }), { status: 409 }),
     )
     await expect(createUser(validRequest, 'tok123', 'uid-admin')).rejects.toThrow(/username already taken/i)
+  })
+})
+
+const mockBooking = {
+  bookingRef: 'bk-abc123',
+  date: '2026-12-10',
+  startTime: '10:00',
+  endTime: '10:30',
+  customerName: 'Alice Smith',
+}
+
+describe('fetchUserBookings', () => {
+  it('calls GET /api/users/{id}/bookings with admin headers', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify({ bookings: [mockBooking] }), { status: 200 }),
+    )
+    await fetchUserBookings('uid-999', 'tok-admin', 'uid-admin')
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/users/uid-999/bookings'),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'X-Admin-Token': 'tok-admin',
+          'X-Admin-UserId': 'uid-admin',
+        }),
+      }),
+    )
+  })
+
+  it('returns parsed bookings array on 200', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify({ bookings: [mockBooking] }), { status: 200 }),
+    )
+    const result = await fetchUserBookings('uid-999', 'tok-admin', 'uid-admin')
+    expect(result).toHaveLength(1)
+    expect(result[0]!.bookingRef).toBe('bk-abc123')
+    expect(result[0]!.customerName).toBe('Alice Smith')
+  })
+
+  it('returns empty array when no bookings', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify({ bookings: [] }), { status: 200 }),
+    )
+    const result = await fetchUserBookings('uid-999', 'tok-admin', 'uid-admin')
+    expect(result).toHaveLength(0)
+  })
+
+  it('throws Unauthorized on 401', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response('', { status: 401 }))
+    await expect(fetchUserBookings('uid-999', 'bad', 'bad')).rejects.toThrow(/unauthorized/i)
   })
 })

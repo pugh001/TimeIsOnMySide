@@ -1,5 +1,6 @@
-import { CreateUserRequestSchema, CreateUserResponseSchema } from './schemas'
-import type { CreateUserRequest, CreateUserResponse } from './schemas'
+import { z } from 'zod'
+import { CreateUserRequestSchema, CreateUserResponseSchema, StaffBookingSchema } from './schemas'
+import type { CreateUserRequest, CreateUserResponse, StaffBookingResponse } from './schemas'
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? ''
 
@@ -30,4 +31,20 @@ export async function createUser(
   }
   if (!res.ok) throw new Error(`createUser failed: ${res.status}`)
   return CreateUserResponseSchema.parse(await res.json())
+}
+
+export async function fetchUserBookings(
+  userId: string,
+  adminToken: string,
+  adminUserId: string,
+): Promise<StaffBookingResponse[]> {
+  const res = await fetch(`${BASE}/api/users/${userId}/bookings`, {
+    headers: {
+      'X-Admin-Token': adminToken,
+      'X-Admin-UserId': adminUserId,
+    },
+  })
+  if (res.status === 401) throw new Error('Unauthorized — admin access required')
+  if (!res.ok) throw new Error(`fetchUserBookings failed: ${res.status}`)
+  return z.object({ bookings: z.array(StaffBookingSchema) }).parse(await res.json()).bookings
 }

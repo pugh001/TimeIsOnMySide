@@ -93,4 +93,42 @@ public sealed class SlotsControllerTests : IntegrationTestBase
         firstSlot.GetProperty("id").GetString()
             .Should().Be($"{LocationSlug}-2026-05-27-09:00");
     }
+
+    [Fact]
+    public async Task GetSlots_LocationOpeningAt0800_FirstSlotIs0800()
+    {
+        var (earlyLocationId, _) = await SeedEarlyOpenLocationAsync(
+            openTime: new TimeOnly(8, 0),
+            closeTime: new TimeOnly(17, 0),
+            shiftStart: new TimeOnly(8, 0),
+            shiftEnd: new TimeOnly(17, 0));
+
+        var response = await Client.GetAsync($"/api/slots?date=2026-05-27&locationId={earlyLocationId}");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var json = await response.Content.ReadAsStringAsync();
+        var doc = JsonDocument.Parse(json);
+        var slots = doc.RootElement.GetProperty("slots").EnumerateArray().ToList();
+
+        slots.Should().NotBeEmpty();
+        slots[0].GetProperty("startTime").GetString().Should().Be("08:00");
+    }
+
+    [Fact]
+    public async Task GetSlots_StaffWorkingFrom0800_0800SlotIsAvailable()
+    {
+        var (earlyLocationId, _) = await SeedEarlyOpenLocationAsync(
+            openTime: new TimeOnly(8, 0),
+            closeTime: new TimeOnly(16, 0),
+            shiftStart: new TimeOnly(8, 0),
+            shiftEnd: new TimeOnly(16, 0));
+
+        var response = await Client.GetAsync($"/api/slots?date=2026-05-27&locationId={earlyLocationId}");
+        var json = await response.Content.ReadAsStringAsync();
+        var doc = JsonDocument.Parse(json);
+        var slots = doc.RootElement.GetProperty("slots").EnumerateArray().ToList();
+
+        slots.Should().Contain(s => s.GetProperty("startTime").GetString() == "08:00"
+                                 && s.GetProperty("status").GetString() == "available");
+    }
 }

@@ -9,12 +9,7 @@ namespace Overtime.Service;
 public sealed class SlotService : ISlotService
 {
     private static readonly TimeOnly[] AllSlotTimes =
-    [
-        new(9, 0), new(9, 30), new(10, 0), new(10, 30),
-        new(11, 0), new(11, 30), new(12, 0), new(12, 30),
-        new(13, 0), new(13, 30), new(14, 0), new(14, 30),
-        new(15, 0), new(15, 30), new(16, 0), new(16, 30)
-    ];
+        Enumerable.Range(0, 48).Select(i => new TimeOnly(i / 2, (i % 2) * 30)).ToArray();
 
     private readonly OvertimeDbContext _db;
 
@@ -66,8 +61,8 @@ public sealed class SlotService : ISlotService
             return [];
 
         var eligibleTimes = AllSlotTimes
-            .Where(t => t >= openTime && t.AddMinutes(30) <= closeTime)
-            .Where(t => staffWorkingToday.Any(x => t >= x.Shift!.ShiftStart && t.AddMinutes(30) <= x.Shift!.ShiftEnd))
+            .Where(t => t >= openTime && SlotEnd(t) <= closeTime)
+            .Where(t => staffWorkingToday.Any(x => t >= x.Shift!.ShiftStart && SlotEnd(t) <= x.Shift!.ShiftEnd))
             .ToArray();
 
 
@@ -106,7 +101,7 @@ public sealed class SlotService : ISlotService
             .OrderBy(t => t)
             .Select(start =>
             {
-                var end = start.AddMinutes(30);
+                var end = SlotEnd(start);
                 bookedCounts.TryGetValue(start, out var booked);
                 var isPast = nowTime.HasValue && start < nowTime.Value;
                 var status = (isPast || (activeStaffCount > 0 && booked >= activeStaffCount))
@@ -121,6 +116,16 @@ public sealed class SlotService : ISlotService
                     Status: status,
                     LocationId: locationSlug);
             }).ToList();
+    }
+
+    // AddMinutes(30) wraps midnight (23:30 → 00:00), making 00:00 ≤ any closeTime.
+    // Compare via total minutes to avoid the wrap-around false positive.
+    private static TimeOnly SlotEnd(TimeOnly start)
+    {
+        var endMinutes = start.Hour * 60 + start.Minute + 30;
+        return endMinutes >= 24 * 60
+            ? new TimeOnly(23, 59) // sentinel: past midnight — always fails <= closeTime
+            : new TimeOnly(endMinutes / 60, endMinutes % 60);
     }
 
     private static OpeningHours? GetDayHours(LocationOpeningHours? hours, DayOfWeek day) =>

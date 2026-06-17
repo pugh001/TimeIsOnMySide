@@ -215,16 +215,4 @@ public sealed class LocationsControllerTests : IntegrationTestBase
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
-    // ── helpers ───────────────────────────────────────────────────────────
-
-    private async Task<(string token, string userId)> GetAdminTokenAsync()
-    {
-        var resp = await Client.PostAsJsonAsync("/api/auth/login",
-            new { username = "admin", password = "admin" });
-        resp.EnsureSuccessStatusCode();
-        var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
-        var token = doc.RootElement.GetProperty("adminToken").GetString()!;
-        var userId = doc.RootElement.GetProperty("adminUserId").GetString()!;
-        return (token, userId);
-    }
 }

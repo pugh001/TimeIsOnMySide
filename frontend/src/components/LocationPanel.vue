@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import { getLocationUsers } from '@/api/locations'
+import UserRow from './UserRow.vue'
 import type { Location, UserSummary } from '@/api/schemas'
 
 const props = defineProps<{ location: Location }>()
@@ -79,16 +80,13 @@ function onAddUser(): void {
       </div>
 
       <ul v-else-if="usersStatus === 'success'" data-testid="user-list" class="user-list" role="list">
-        <li v-for="user in users" :key="user.id" class="user-item">
-          <span class="user-name">{{ user.fullName }}</span>
-          <span class="user-schedule">
-            <span
-              v-for="wt in user.workingTimes"
-              :key="wt.day"
-              class="user-day-shift"
-            >{{ wt.day.slice(0, 3) }} {{ wt.shiftStart }}–{{ wt.shiftEnd }}</span>
-          </span>
-        </li>
+        <UserRow
+          v-for="user in users"
+          :key="user.id"
+          :user="user"
+          :admin-token="auth.adminToken ?? ''"
+          :admin-user-id="auth.adminUserId ?? ''"
+        />
       </ul>
     </div>
   </div>
@@ -189,35 +187,5 @@ function onAddUser(): void {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-}
-
-.user-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.875rem;
-  color: #0f172a;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.user-item:last-child {
-  border-bottom: none;
-}
-
-.user-name {
-  font-weight: 500;
-}
-
-.user-schedule {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem 0.75rem;
-}
-
-.user-day-shift {
-  font-size: 0.8125rem;
-  color: #64748b;
-  text-transform: capitalize;
 }
 </style>
