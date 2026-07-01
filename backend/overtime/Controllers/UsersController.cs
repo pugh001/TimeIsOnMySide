@@ -40,7 +40,7 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetUserBookings([FromRoute] Guid userId, CancellationToken ct)
     {
-        var bookings = await _bookingService.GetBookingsByUserIdAsync(userId, ct);
+        var bookings = await _bookingService.GetBookingsAsync(userId, ct);
         return Ok(new { bookings });
     }
 }

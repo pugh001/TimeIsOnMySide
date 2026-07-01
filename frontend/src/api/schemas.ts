@@ -4,8 +4,16 @@ const TIME_MINUTES_MIN = 0
 const TIME_MINUTES_MAX = 23 * 60 + 59
 const OPENING_SPAN_MINUTES_MIN = 60
 
-export const DAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
-export type DayKey = typeof DAY_KEYS[number]
+export const DAY_KEYS = [
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+  'sunday',
+] as const
+export type DayKey = (typeof DAY_KEYS)[number]
 
 function toMinutes(hhmm: string): number {
   const parts = hhmm.split(':').map(Number)
@@ -17,13 +25,17 @@ export const LocationSchema = z.object({
   slug: z.string().min(1),
   name: z.string().min(1),
   address: z.string().optional(),
-  openingHours: z.record(
-    z.string(),
-    z.object({
-      openTime: z.string().regex(/^\d{2}:\d{2}$/),
-      closeTime: z.string().regex(/^\d{2}:\d{2}$/),
-    }).nullable(),
-  ).optional(),
+  openingHours: z
+    .record(
+      z.string(),
+      z
+        .object({
+          openTime: z.string().regex(/^\d{2}:\d{2}$/),
+          closeTime: z.string().regex(/^\d{2}:\d{2}$/),
+        })
+        .nullable(),
+    )
+    .optional(),
 })
 
 export type Location = z.infer<typeof LocationSchema>
@@ -131,16 +143,25 @@ function shiftSpanMinutes(start: string, end: string): number {
 }
 
 export const CreateUserRequestSchema = z.object({
-  firstName: z.string().min(1, 'First name is required').regex(/^[a-zA-Z]+$/, 'First name must contain letters only'),
-  lastName: z.string().min(1, 'Last name is required').regex(/^[a-zA-Z]+$/, 'Last name must contain letters only'),
+  firstName: z
+    .string()
+    .min(1, 'First name is required')
+    .regex(/^[a-zA-Z]+$/, 'First name must contain letters only'),
+  lastName: z
+    .string()
+    .min(1, 'Last name is required')
+    .regex(/^[a-zA-Z]+$/, 'Last name must contain letters only'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   locationId: z.string().min(1, 'A location is required'),
-  workingTimes: z.array(
-    WorkingTimeSchema.refine(
-      ({ shiftStart, shiftEnd }) => shiftSpanMinutes(shiftStart, shiftEnd) <= SHIFT_SPAN_MINUTES_MAX,
-      { message: 'Shift cannot exceed 8 hours', path: ['shiftEnd'] },
-    ),
-  ).min(1, 'Select at least one working day'),
+  workingTimes: z
+    .array(
+      WorkingTimeSchema.refine(
+        ({ shiftStart, shiftEnd }) =>
+          shiftSpanMinutes(shiftStart, shiftEnd) <= SHIFT_SPAN_MINUTES_MAX,
+        { message: 'Shift cannot exceed 8 hours', path: ['shiftEnd'] },
+      ),
+    )
+    .min(1, 'Select at least one working day'),
 })
 
 export const CreateUserResponseSchema = z.object({
@@ -160,3 +181,6 @@ export const StaffBookingSchema = z.object({
 })
 
 export type StaffBookingResponse = z.infer<typeof StaffBookingSchema>
+
+export const StaffBookingsEnvelopeSchema = z.object({ bookings: z.array(StaffBookingSchema) })
+export type StaffBookingsEnvelope = z.infer<typeof StaffBookingsEnvelopeSchema>

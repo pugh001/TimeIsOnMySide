@@ -131,33 +131,11 @@ public sealed partial class BookingService : IBookingService
         if (staffId == Guid.Empty)
             throw new ArgumentException("staffId must not be empty.", nameof(staffId));
 
-        var fromDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        var fromDate = DateOnly.FromDateTime(DateTime.Now);
 
         return await _db.Bookings
             .AsNoTracking()
             .Where(b => b.StaffId == staffId && b.SlotDate >= fromDate)
-            .OrderBy(b => b.SlotDate)
-            .ThenBy(b => b.StartTime)
-            .Select(b => new BookingResponse(
-                b.BookingRef,
-                b.SlotDate.ToString("yyyy-MM-dd"),
-                b.StartTime.ToString("HH:mm"),
-                b.EndTime.ToString("HH:mm"),
-                b.CustomerName))
-            .ToListAsync(ct);
-    }
-
-    public async Task<IReadOnlyList<BookingResponse>> GetBookingsByUserIdAsync(
-        Guid userId, CancellationToken ct = default)
-    {
-        if (userId == Guid.Empty)
-            throw new ArgumentException("userId must not be empty.", nameof(userId));
-
-        var fromDate = DateOnly.FromDateTime(DateTime.UtcNow);
-
-        return await _db.Bookings
-            .AsNoTracking()
-            .Where(b => b.StaffId == userId && b.SlotDate >= fromDate)
             .OrderBy(b => b.SlotDate)
             .ThenBy(b => b.StartTime)
             .Select(b => new BookingResponse(

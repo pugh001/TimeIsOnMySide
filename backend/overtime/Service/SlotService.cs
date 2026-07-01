@@ -61,8 +61,8 @@ public sealed class SlotService : ISlotService
             return [];
 
         var eligibleTimes = AllSlotTimes
-            .Where(t => t >= openTime && SlotEnd(t) <= closeTime)
-            .Where(t => staffWorkingToday.Any(x => t >= x.Shift!.ShiftStart && SlotEnd(t) <= x.Shift!.ShiftEnd))
+            .Where(t => SlotEnd(t) is {} end && t >= openTime && end <= closeTime)
+            .Where(t => SlotEnd(t) is {} end && staffWorkingToday.Any(x => t >= x.Shift!.ShiftStart && end <= x.Shift!.ShiftEnd))
             .ToArray();
 
 
@@ -101,7 +101,7 @@ public sealed class SlotService : ISlotService
             .OrderBy(t => t)
             .Select(start =>
             {
-                var end = SlotEnd(start);
+                var end = SlotEnd(start) ?? start; // midnight-crossing slots are filtered out before reaching here
                 bookedCounts.TryGetValue(start, out var booked);
                 var isPast = nowTime.HasValue && start < nowTime.Value;
                 var status = (isPast || (activeStaffCount > 0 && booked >= activeStaffCount))
@@ -118,14 +118,11 @@ public sealed class SlotService : ISlotService
             }).ToList();
     }
 
-    // AddMinutes(30) wraps midnight (23:30 → 00:00), making 00:00 ≤ any closeTime.
-    // Compare via total minutes to avoid the wrap-around false positive.
-    private static TimeOnly SlotEnd(TimeOnly start)
+    // Returns null when the slot would cross midnight — null always fails the <= closeTime filter.
+    private static TimeOnly? SlotEnd(TimeOnly start)
     {
         var endMinutes = start.Hour * 60 + start.Minute + 30;
-        return endMinutes >= 24 * 60
-            ? new TimeOnly(23, 59) // sentinel: past midnight — always fails <= closeTime
-            : new TimeOnly(endMinutes / 60, endMinutes % 60);
+        return endMinutes >= 24 * 60 ? null : new TimeOnly(endMinutes / 60, endMinutes % 60);
     }
 
     private static OpeningHours? GetDayHours(LocationOpeningHours? hours, DayOfWeek day) =>
